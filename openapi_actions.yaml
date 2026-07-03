@@ -1,0 +1,328 @@
+openapi: 3.1.0
+info:
+  title: Yuanying WDP Hard Gate
+  version: 8.5.0
+  description: Deterministic media registry, hard gates, storyboard assembly, DOCX construction, PPI/render audit and release.
+servers:
+  - url: https://YOUR-WDP-DOMAIN.example
+security:
+  - ApiKeyAuth: []
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Check WDP server availability.
+      security: []
+      responses:
+        '200': {description: OK}
+  /projects:
+    post:
+      operationId: createProject
+      summary: Create a project and declare exact per-scene formal image and storyboard frame counts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, scenes]
+              properties:
+                name: {type: string}
+                scenes:
+                  type: array
+                  items:
+                    type: object
+                    required: [scene_id, expected_formal_count]
+                    properties:
+                      scene_id: {type: string, example: S01}
+                      expected_formal_count: {type: integer, minimum: 1, maximum: 10}
+                      expected_storyboard_frames: {type: integer, minimum: 0, maximum: 12}
+      responses:
+        '200': {description: Project created}
+  /projects/{project_id}/source-docx:
+    post:
+      operationId: uploadSourceDocx
+      summary: Upload exactly one text-complete source DOCX created by Code Interpreter or supplied by the user, then create stable structural anchors.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [openaiFileIdRefs]
+              properties:
+                openaiFileIdRefs:
+                  type: array
+                  maxItems: 1
+                  description: Exactly one DOCX file from the conversation. At runtime OpenAI supplies file reference objects.
+                  items: {type: string}
+      responses:
+        '200': {description: Source saved and anchors mapped}
+  /projects/{project_id}/assets:
+    post:
+      operationId: registerAssets
+      summary: Immediately transfer and register up to ten generated or uploaded files. Formal images and storyboard frames must be sent in separate scene batches.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [openaiFileIdRefs, assets]
+              properties:
+                openaiFileIdRefs:
+                  type: array
+                  maxItems: 10
+                  description: Actual image files from the conversation, including generated images. Runtime items are file reference objects with temporary download URLs.
+                  items: {type: string}
+                assets:
+                  type: array
+                  maxItems: 10
+                  items:
+                    $ref: '#/components/schemas/AssetMeta'
+      responses:
+        '200': {description: Files persisted and registered with permissions off by default}
+  /projects/{project_id}/assets/qc:
+    post:
+      operationId: recordAssetQC
+      summary: Record structured visual QC. Passing QC is the only way to enable embed/recompile/board permissions.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [asset_id, qc_status, evidence]
+              properties:
+                asset_id: {type: string}
+                qc_status: {type: string}
+                evidence: {type: object, additionalProperties: true}
+      responses:
+        '200': {description: QC stored}
+  /projects/{project_id}/scenes/{scene_id}/formal-gate:
+    post:
+      operationId: evaluateFormalGate
+      summary: Hard-block downstream work unless exact planned formal images exist, pass QC, and are independently sourced.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/SceneId'
+      responses:
+        '200': {description: Signed gate receipt}
+  /projects/{project_id}/scenes/{scene_id}/actual-image-audit:
+    post:
+      operationId: recordActualImageAudit
+      summary: Record planned-versus-visible image differences. An empty list is allowed only with explicit no_difference_confirmed true.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/SceneId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                delta_items: {type: array, items: {type: object, additionalProperties: true}}
+                no_difference_confirmed: {type: boolean}
+      responses:
+        '200': {description: Audit receipt}
+  /projects/{project_id}/scenes/{scene_id}/video-prompt:
+    post:
+      operationId: registerFinalVideoPrompt
+      summary: Register a genuinely recompiled FINAL video prompt. Blocked until formal and actual-image audit receipts pass.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/SceneId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content, source_asset_ids, quality_evidence]
+              properties:
+                content: {type: string, minLength: 120}
+                source_asset_ids: {type: array, items: {type: string}}
+                quality_evidence:
+                  type: object
+                  description: All hard-gate booleans must be true; see VideoQualityEvidence.
+                  $ref: '#/components/schemas/VideoQualityEvidence'
+      responses:
+        '200': {description: FINAL prompt receipt}
+  /projects/{project_id}/scenes/{scene_id}/storyboard/compose:
+    post:
+      operationId: composeStoryboard
+      summary: Programmatically compose a board only from storyboard frames that already passed structured QC.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/SceneId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [board_asset_id]
+              properties:
+                board_asset_id: {type: string}
+                cols: {type: integer, default: 4}
+                cell_w: {type: integer, default: 1920}
+                cell_h: {type: integer, default: 1080}
+      responses:
+        '200': {description: Board created but still requires board QC}
+  /projects/{project_id}/scenes/{scene_id}/storyboard-gate:
+    post:
+      operationId: evaluateStoryboardGate
+      summary: Verify all frames and the final board are approved and embed-ready.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/SceneId'
+        - in: query
+          name: board_asset_id
+          required: true
+          schema: {type: string}
+      responses:
+        '200': {description: Storyboard gate receipt}
+  /projects/{project_id}/embed-plan:
+    post:
+      operationId: setEmbedPlan
+      summary: Validate and store the exact anchor-to-asset plan. Slot and asset kinds must match; no fallback substitution.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [operations]
+              properties:
+                operations:
+                  type: array
+                  items: {type: object, additionalProperties: true}
+      responses:
+        '200': {description: Plan accepted or rejected}
+  /projects/{project_id}/build-preview:
+    post:
+      operationId: buildDocxPreview
+      summary: Build an auditable DOCX preview, run media/PPI checks, render PDF pages and return the preview PDF when eligible.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Preview reports and optional openaiFileResponse PDF
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /projects/{project_id}/visual-page-qc:
+    post:
+      operationId: confirmVisualPageQC
+      summary: Record explicit per-page visual inspection. Rendering alone never implies visual PASS.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [page_results, note]
+              properties:
+                page_results:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PageQCResult'
+                note: {type: string}
+      responses:
+        '200': {description: Visual QC recorded}
+  /projects/{project_id}/release:
+    post:
+      operationId: evaluateAndRelease
+      summary: Release the final DOCX only if every scene and every document audit passes. Returns a DOCX file or signed artifact URL.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Release decision and optional openaiFileResponse DOCX
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+  /projects/{project_id}:
+    get:
+      operationId: getProjectState
+      summary: Read current scene gates, registered assets, and project release state.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200': {description: Project state}
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  parameters:
+    ProjectId:
+      in: path
+      name: project_id
+      required: true
+      schema: {type: string}
+    SceneId:
+      in: path
+      name: scene_id
+      required: true
+      schema: {type: string}
+  schemas:
+    AssetMeta:
+      type: object
+      required: [asset_id, kind, source_kind]
+      properties:
+        asset_id: {type: string}
+        scene_id: {type: string}
+        kind:
+          type: string
+          enum: [FORMAL_IMAGE, STORYBOARD_FRAME, STORYBOARD_BOARD, CONCEPT, PROMPT_CARD, DOCUMENT, RENDER_PAGE, EXTRA]
+        source_kind:
+          type: string
+          enum: [DALL_E_GENERATED, API_GENERATED, USER_UPLOADED, MANUAL_APPROVED, INDEPENDENT_GENERATION, PROGRAMMATIC, UNVERIFIED, PROMPT_CARD, CONCEPT_COMPOSITE, CONTACT_SHEET, PAGE_SCREENSHOT, RENDER_CROP, PLACEHOLDER]
+        orig_fig_no: {type: string}
+        shot_id: {type: string}
+        timecode: {type: string}
+        prompt_version: {type: string}
+    VideoQualityEvidence:
+      type: object
+      required: [references_actual_assets, actual_image_delta_applied, character_equipment_synced, scene_light_synced, timeline_complete, entry_exit_complete, camera_sound_complete, platform_char_limit_pass, not_draft]
+      properties:
+        references_actual_assets: {type: boolean}
+        actual_image_delta_applied: {type: boolean}
+        character_equipment_synced: {type: boolean}
+        scene_light_synced: {type: boolean}
+        timeline_complete: {type: boolean}
+        entry_exit_complete: {type: boolean}
+        camera_sound_complete: {type: boolean}
+        platform_char_limit_pass: {type: boolean}
+        not_draft: {type: boolean}
+      additionalProperties: true
+    PageQCResult:
+      type: object
+      required: [page, status, no_wrong_asset, no_cropping, no_overlap, text_legible, storyboard_readable, section_order_correct, header_footer_ok]
+      properties:
+        page: {type: integer, minimum: 1}
+        status: {type: string, enum: [PASS, FAIL]}
+        no_wrong_asset: {type: boolean}
+        no_cropping: {type: boolean}
+        no_overlap: {type: boolean}
+        text_legible: {type: boolean}
+        storyboard_readable: {type: boolean}
+        section_order_correct: {type: boolean}
+        header_footer_ok: {type: boolean}
+        note: {type: string}
+      additionalProperties: false
