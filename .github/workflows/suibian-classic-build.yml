@@ -20,7 +20,10 @@ jobs:
         with:
           gradle-version: '8.7'
       - name: Install platform
-        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+        run: |
+          SDK_MANAGER=$(find /usr/local/lib/android/sdk/cmdline-tools -type f -name sdkmanager | head -1)
+          test -x "$SDK_MANAGER"
+          "$SDK_MANAGER" 'platforms;android-35' 'build-tools;35.0.0'
       - name: Build
         working-directory: suibian-classic
         run: gradle --no-daemon :app:assembleDebug
