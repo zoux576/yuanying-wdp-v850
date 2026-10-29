@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="color-scheme" content="dark"/>
+<title>Classic AI Studio</title>
+<link rel="stylesheet" href="studio.css"/>
+</head>
+<body>
+<div class="backdrop b1"></div><div class="backdrop b2"></div>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><span class="brandmark"><svg viewBox="0 0 32 32" fill="none"><path d="M6 23 15.4 5 21.2 16 26 9" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.5" cy="24.5" r="4.5" fill="#bbf7da"/></svg></span><div><div class="eyebrow">CLASSIC CREATION STUDIO</div><h1 data-i18n="appName">Classic AI Studio</h1></div></div>
+    <span class="version">CLASSIC <span class="accent">38.8.1</span></span>
+  </header>
+  <div class="hero">
+    <div class="kicker"><span class="spark">&#10022;</span> <span data-i18n="heroKicker">One workspace, two sources</span></div>
+    <h2><span data-i18n="heroOne">Create the way</span><br/><span class="gradient-text" data-i18n="heroTwo">you like.</span></h2>
+    <p data-i18n="heroSub">Switch sources without replacing the original app.</p>
+  </div>
+  <section class="source-panel" aria-label="Source selection">
+    <div class="section-caption" data-i18n="chooseSource">SELECT AI SOURCE</div>
+    <div class="source-tabs" role="tablist">
+      <button type="button" class="source-tab active" role="tab" aria-selected="true" data-source="custom" id="customTab"><span class="tab-ico">&#9670;</span><span class="tab-title" data-i18n="customMode">Custom AI API</span><small data-i18n="noSuibianLogin">No Suibian login</small></button>
+      <button type="button" class="source-tab" role="tab" aria-selected="false" data-source="official" id="officialTab"><span class="tab-ico">&#9673;</span><span class="tab-title" data-i18n="officialMode">Official Suibian AI</span><small data-i18n="officialAccount">Official account required</small></button>
+    </div>
+  </section>
+  <main id="customSection">
+    <section class="card project-card">
+      <div class="card-heading"><div><div class="step-label">01 / <span data-i18n="createStep">CREATE</span></div><h3 data-i18n="chooseCreation">Choose your creation</h3></div><span class="light-dot"></span></div>
+      <div class="task-tabs" role="tablist" aria-label="Creation type">
+        <button type="button" data-kind="image" class="task active" aria-selected="true"><span class="task-icon">&#9728;</span><span data-i18n="textToImage">Text to image</span></button>
+        <button type="button" data-kind="edit" class="task" aria-selected="false"><span class="task-icon">&#9635;</span><span data-i18n="imageEdit">Reference edit</span></button>
+        <button type="button" data-kind="video" class="task" aria-selected="false"><span class="task-icon">&#9654;</span><span data-i18n="videoCreate">Text to video</span></button>
+      </div>
+      <label class="field-label" for="prompt"><span data-i18n="promptLabel">Creative prompt</span><span class="hint" id="promptCount">0 / 3000</span></label>
+      <div class="prompt-wrap"><textarea id="prompt" maxlength="3000" rows="5" data-placeholder="promptPlaceholder" placeholder="Describe your idea in detail..."></textarea><span class="prompt-corner">&#10022;</span></div>
+      <div class="prompt-footer"><span data-i18n="promptTip">Describe subject, setting, lighting and style for better results.</span><button type="button" id="clearPrompt" class="text-button" data-i18n="clear">Clear</button></div>
+      <div id="referenceWrap" class="reference-wrap" hidden><div class="field-label" data-i18n="referenceImage">Reference image</div><label class="upload-zone" for="referenceInput"><span class="upload-symbol">&#43;</span><span class="upload-title" data-i18n="selectImage">Choose an image</span><span class="upload-caption" data-i18n="imageLimit">JPG/PNG, compressed before upload</span><input id="referenceInput" type="file" accept="image/png,image/jpeg,image/webp"/></label><img id="referencePreview" alt="Reference preview" hidden/><button type="button" id="removeReference" class="text-button" hidden data-i18n="removeImage">Remove image</button></div>
+    </section>
+    <section class="card parameters-card"><div class="card-heading"><div><div class="step-label">02 / <span data-i18n="parametersStep">PARAMETERS</span></div><h3 data-i18n="fineTune">Fine tune the result</h3></div></div>
+      <div class="field-row"><label class="field" for="model"><span class="field-label" data-i18n="model">Model</span><input id="model" spellcheck="false" value="gpt-image-1" placeholder="gpt-image-1" list="modelsList"/><datalist id="modelsList"></datalist></label><label class="field" for="size"><span class="field-label" data-i18n="size">Image size</span><select id="size"><option value="1024x1024">1 : 1</option><option value="1536x1024">3 : 2</option><option value="1024x1536">2 : 3</option><option value="auto">AUTO</option></select></label></div>
+      <div class="field-row" id="videoOptions" hidden><label class="field" for="duration"><span class="field-label" data-i18n="duration">Duration (seconds)</span><select id="duration"><option>5</option><option>10</option><option>15</option></select></label><label class="field" for="aspect"><span class="field-label" data-i18n="ratio">Ratio</span><select id="aspect"><option>16:9</option><option>9:16</option><option>1:1</option></select></label></div>
+    </section>
+    <section class="card api-card"><button id="apiToggle" type="button" class="api-collapse" aria-expanded="false"><div class="api-left"><span class="api-symbol">&#9881;</span><div><span class="api-title" data-i18n="apiTitle">AI connection settings</span><small data-i18n="apiSubtitle">Your HTTPS endpoint and model credentials</small></div></div><span class="chevron" id="apiChevron">&#8964;</span></button>
+      <div id="apiContent" class="api-content" hidden><div class="field"><label class="field-label" for="baseUrl" data-i18n="apiUrl">Base URL</label><input id="baseUrl" type="url" autocomplete="url" spellcheck="false" placeholder="https://api.example.com/v1"/></div>
+        <div class="field"><label class="field-label" for="apiKey" data-i18n="apiKey">API key</label><div class="secret-field"><input id="apiKey" type="password" autocomplete="off" placeholder="sk-..."/><button type="button" id="showKey" class="secret-toggle" data-i18n="show">Show</button></div></div>
+        <div class="field-row"><label class="field"><span class="field-label" data-i18n="generatePath">Generate path</span><input id="generatePath" value="/images/generations" spellcheck="false"/></label><label class="field"><span class="field-label" data-i18n="editPath">Edit path</span><input id="editPath" value="/images/edits" spellcheck="false"/></label></div>
+        <label class="field"><span class="field-label" data-i18n="videoPath">Video path (provider-specific)</span><input id="videoPath" value="/videos" spellcheck="false"/></label>
+        <label class="savekey"><input id="rememberKey" type="checkbox"/><span data-i18n="saveKeyNote">Remember API key on this device (off by default)</span></label>
+        <div class="connection-actions"><button type="button" id="testConnection" class="secondary-button"><span>&#9678;</span> <span data-i18n="testConnection">Test connection (no generation)</span></button><span class="secure-note" data-i18n="httpsOnly">HTTPS only</span></div><p id="connectionStatus" role="status" class="connection-status"></p>
+      </div>
+    </section>
+    <button type="button" class="generate-button" id="generateButton"><span>&#10022;</span><span data-i18n="generate">Generate now</span><span class="forward">&#8594;</span></button>
+    <div class="safety-note"><span>&#9679;</span> <span data-i18n="billingNote">Generation can incur provider charges. No automatic retries.</span></div>
+    <section class="card result-card"><div class="card-heading"><div><div class="step-label">03 / <span data-i18n="resultsStep">RESULT</span></div><h3 data-i18n="latestResult">Latest result</h3></div><span id="resultTag" class="result-tag" data-i18n="ready">READY</span></div>
+      <div id="emptyResult" class="result-empty"><div class="empty-art"><div class="empty-orb"></div><span>&#10022;</span></div><div class="empty-title" data-i18n="resultPlaceholder">Your creation will appear here</div><p data-i18n="resultSub">Choose an API, write your idea, then generate.</p></div>
+      <div id="resultContent" hidden><img id="resultImage" alt="Generated image" hidden/><video id="resultVideo" controls playsinline hidden></video><pre id="resultRaw" hidden></pre><div id="taskId" class="task-status" hidden></div><button type="button" id="saveResult" class="secondary-button" hidden data-i18n="saveImage">Save image</button></div>
+    </section>
+  </main>
+  <main id="officialSection" hidden><section class="card official-card"><div class="official-graphic"><span class="official-ring a"></span><span class="official-ring b"></span><span class="official-letter">S</span></div><div class="section-caption" data-i18n="originalOfficial">ORIGINAL APP HANDOFF</div><h3 data-i18n="officialHeading">Continue in official Suibian</h3><p data-i18n="officialDescription">This mode opens the unmodified, installed official Suibian app for its own AI features. Official login and available creation flow remain controlled by the publisher.</p><div class="official-info"><span>&#10003;</span><span data-i18n="keepOfficial">Original 38.8.1 and account data remain unchanged</span></div><div class="official-info"><span>&#10003;</span><span data-i18n="noBypass">No signature changes or login bypass</span></div><button id="openOfficial" class="generate-button" type="button"><span>&#9673;</span><span data-i18n="openOfficial">Open official Suibian</span><span class="forward">&#8599;</span></button><div class="official-warning" data-i18n="officialLimit">The official provider cannot be embedded or used before login without publisher authorization. Opening the app does not force the old creation page.</div></section></main>
+  <div class="footer"><span data-i18n="footerFirst">Independent companion / official app untouched</span><span class="footer-dot"></span><span>v38.8.1-classic.2</span></div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="studio.js"></script>
+</body>
+</html>

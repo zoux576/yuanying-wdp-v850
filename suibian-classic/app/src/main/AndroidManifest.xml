@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <queries><package android:name="com.ss.android.spark"/></queries>
+    <application android:allowBackup="false" android:usesCleartextTraffic="false"
+        android:label="&#x7ECF;&#x5178; AI &#x521B;&#x4F5C;" android:theme="@android:style/Theme.Material.NoActionBar"
+        android:supportsRtl="true" android:icon="@mipmap/ic_launcher">
+        <activity android:name=".MainActivity" android:exported="true"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

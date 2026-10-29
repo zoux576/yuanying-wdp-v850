@@ -1,0 +1,16 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'app.suibian.classic.ai'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'app.suibian.classic.ai'
+        minSdk 26
+        targetSdk 32
+        versionCode 388102
+        versionName '38.8.1-classic.2'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
